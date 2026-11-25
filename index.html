@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#176746">
+  <meta name="description" content="쓰레기통이 필요한 순간, 가까이. 내 주변 쓰레기통을 찾는 간단한 지도 서비스.">
+  <title>가까이 — 내 주변 쓰레기통</title>
+  <link rel="stylesheet" href="vendor/leaflet.css"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="bin" viewBox="0 0 24 24"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></symbol>
+    <symbol id="pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1116 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="walk" viewBox="0 0 24 24"><circle cx="14" cy="4" r="2"/><path d="m10 21 3-7-3-4 2-3 3 4 4 2M5 12l5-2m0 0-2 6-4 5m9-7 4 7"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="recycle" viewBox="0 0 24 24"><path d="m9 5 3-3 4 7m0-5v5h-5M19 12l3 5-4 3h-4m5-4-1 4 4 1M10 20H4l-2-4 4-7m0 5V9H1"/></symbol>
+    <symbol id="route" viewBox="0 0 24 24"><path d="m12 3 9 9-9 9-9-9 9-9Z"/><path d="M9 16v-5h7m-3-3 3 3-3 3"/></symbol>
+  </defs></svg>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="가까이 홈"><span class="brand-icon"><svg><use href="#bin"/></svg></span>가까이<span class="brand-sub">깨끗한 거리의 시작</span></a>
+    <div class="header-right"><span class="demo-label">체험 버전</span><button class="report-top" data-report="new"><svg><use href="#plus"/></svg>쓰레기통 제보</button></div>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar">
+      <div class="intro"><span class="eyebrow">필요한 순간, 가까이</span><h1>쓰레기통,<br>멀리 찾지 마세요.</h1><p>내 주변 쓰레기통을 한눈에 찾아보세요.</p></div>
+      <button id="locate-btn" class="location"><svg><use href="#locate"/></svg><span id="location-text">내 위치로 찾기</span><span class="location-hint">GPS</span></button>
+      <div class="filters" aria-label="쓰레기통 종류"><button class="active" data-filter="all" aria-pressed="true">전체</button><button data-filter="general" aria-pressed="false">일반쓰레기</button><button data-filter="recycle" aria-pressed="false">재활용</button><button data-filter="cigarette" aria-pressed="false">담배꽁초</button></div>
+      <div class="list-heading"><h2>주변 쓰레기통 <span id="count">0</span></h2><span>가까운 순</span></div>
+      <div id="bins" class="bin-list"></div>
+      <div class="sidebar-footer"><svg><use href="#pin"/></svg><div><strong id="area-name">홍대입구역 주변 · 예시 위치</strong><p>표시된 쓰레기통은 실제 설치 정보가 아닌 예시입니다.<br>직선거리 기준 · 도보 시간은 참고용 예상치</p></div></div>
+    </aside>
+    <section class="map-pane" aria-label="주변 쓰레기통 지도">
+      <div id="map"></div>
+      <div class="map-note"><span class="sample-dot"></span>홍대 주변 예시 데이터로 둘러보기<button id="reset-demo">초기 위치</button></div>
+      <div class="map-legend"><span><i class="green-dot"></i>쓰레기통</span><span><i class="blue-dot"></i>기준 위치</span></div>
+      <div class="map-bottom"><span class="map-slogan">작은 실천으로, 더 깨끗한 거리.</span><button class="map-locate" id="map-locate" aria-label="기준 위치로 지도 이동"><svg><use href="#locate"/></svg></button></div>
+      <div id="map-error" hidden>지도를 불러오지 못했어요. 왼쪽 목록에서 쓰레기통 정보를 확인하세요.</div>
+    </section>
+  </main>
+  <dialog id="report-dialog">
+    <form id="report-form">
+      <div class="dialog-top"><span class="eyebrow">함께 만드는 깨끗한 동네</span><button type="button" class="close" aria-label="닫기">×</button></div>
+      <h2 id="dialog-title">쓰레기통 제보하기</h2><p class="form-note">제보는 이 기기의 브라우저에만 저장됩니다.</p>
+      <label>제보 종류<select id="report-kind"><option value="new">새로운 쓰레기통</option><option value="full">가득 참</option><option value="missing">철거·분실</option></select></label>
+      <label>위치 이름<input id="report-name" placeholder="예: ○○편의점 앞" required maxlength="50"></label>
+      <div id="new-fields"><label>쓰레기통 종류<select id="report-type"><option value="general">일반쓰레기</option><option value="recycle">재활용</option><option value="cigarette">담배꽁초</option></select></label><label>설치 위치<span class="field-help">지도를 움직여 중심을 맞춘 후 제보하세요.</span></label><p class="coordinate" id="coordinates"></p></div>
+      <label>설명 <span class="optional">선택</span><textarea id="report-description" placeholder="찾기 쉬운 위치나 현재 상태를 알려주세요." maxlength="200" rows="2"></textarea></label>
+      <button class="primary submit" type="submit">이 기기에 제보 저장</button>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/leaflet.js"></script><script src="app.js"></script>
+</body>
+</html>
